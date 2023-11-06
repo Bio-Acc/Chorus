@@ -38,11 +38,11 @@ CUDA Environment (add to ~/.bashrc):
 
 2.2. Tantan the database
 
-    tantan -p <protein_db.fasta> > <protein_db_tantaned.fasta>
+    tantan -p -x X <protein_db.fasta> > <protein_db_tantaned.fasta>
 
 2.3. Tantan the query sequences
 
-    tantan -p <query.fasta> > <query_tantaned.fasta>
+    tantan -p -x X <query.fasta> > <query_tantaned.fasta>
 
 ### 3. Create database (process only once for each database)
 
