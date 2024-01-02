@@ -2,6 +2,7 @@
 
 Chorus is an efficient protein-protein local alignment search tool for multiple query sequences and large databases. Our method is up to 300x faster than NCBI-BLASTP when inputting multiple query seqs at a time, and can stay ahead of the state-of-the-art database-index methods when there are less than 5000 input query seqs (2.2-27x faster than fastest MMseqs2, 1.1-9x than fastest DIAMOND), while maintaining a low memory footprint. 
 
+
 ## Requirements
 
 
@@ -70,6 +71,7 @@ E.g.
     ./query -d ../db/nr -q ../example_query -o res.out
 
 
+
 ## More Arguments for Seaching
 
 Please use 
@@ -92,4 +94,9 @@ to get help message.
 | --band-width      | The bandwidth in banded smith-waterman. The larger the value, the more sensitive the result.                                    | 8      |
 | --must-include    | Requires the ref sequence must match a regular expression n times. (e.g. --must-include "R[A-Z]{4,7}H" 2)   | No limit  |
 
+## Manuscript Reproduction Scripts: "Rapid Multiple Protein Sequence Search by Parallel and Heterogeneous Computation"
+
+This repository contains the source code for the manuscript titled "Rapid Multiple Protein Sequence Search by Parallel and Heterogeneous Computation." 
+
+If you want to reproduce the experimental results in the manuscript. please visit: [Chorus Reproduction Scripts](https://github.com/FanxwGit/Chorus-Reproduction-Scripts).
 
