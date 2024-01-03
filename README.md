@@ -93,7 +93,7 @@ to get help message.
 | --band-width      | The bandwidth in banded smith-waterman. The larger the value, the more sensitive the result.                                    | 8      |
 | --must-include    | Requires the ref sequence must match a regular expression n times. (e.g. --must-include "R[A-Z]{4,7}H" 2)   | No limit  |
 
-## More Install methods
+## More installation methods
 
 ### docker
 
