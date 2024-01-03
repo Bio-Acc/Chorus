@@ -71,7 +71,6 @@ E.g.
     ./query -d ../db/nr -q ../example_query -o res.out
 
 
-
 ## More Arguments for Seaching
 
 Please use 
@@ -94,9 +93,13 @@ to get help message.
 | --band-width      | The bandwidth in banded smith-waterman. The larger the value, the more sensitive the result.                                    | 8      |
 | --must-include    | Requires the ref sequence must match a regular expression n times. (e.g. --must-include "R[A-Z]{4,7}H" 2)   | No limit  |
 
-## Manuscript Reproduction Scripts: "Rapid Multiple Protein Sequence Search by Parallel and Heterogeneous Computation"
+## More installation methods
 
-This repository contains the source code for the manuscript titled "Rapid Multiple Protein Sequence Search by Parallel and Heterogeneous Computation." 
+### docker
+
+We offer Docker services for Chorus. For more information, please visit our Docker Hub page at [bioacc/chorus](https://hub.docker.com/r/bioacc/chorus).
+
+## Manuscript Reproduction Scripts: "Rapid Multiple Protein Sequence Search by Parallel and Heterogeneous Computation"
 
 If you want to reproduce the experimental results in the manuscript. please visit: [Chorus Reproduction Scripts](https://github.com/FanxwGit/Chorus-Reproduction-Scripts).
 
