@@ -1,6 +1,6 @@
 #include "util.h"
 
-#define MASK5(v) (v & 0b11111)
+// #define MASK5(v) (v & 0b11111)
 
 ArgumentParser arg_parser;
 int seed_length;
@@ -240,8 +240,10 @@ void load_seq(string db, int num, char *&str, size_t &len)
     str = str1;
     // cout << "Load db " << db << num << " successful. Total length = " << len << endl;
 }
-
-void proceed_result(vector<SWResult> *res_d, vector<SWResult> &res_t, const char *query, const char *subj, QueryGroup &q_group, const char *s_name, const size_t *s_offsets, const size_t *sn_offsets, const size_t s_num, size_t total_db_size)
+// TODO 
+void proceed_result(vector<SWResult> *res_d, vector<SWResult> &res_t, const char *query, const char *subj, \
+                    QueryGroup &q_group, const char *s_name, const size_t *s_offsets,\
+                    const size_t *sn_offsets, const size_t s_num, size_t total_db_size)
 {
     set<int> modified_resq;
 
@@ -391,6 +393,97 @@ void proceed_result(vector<SWResult> *res_d, vector<SWResult> &res_t, const char
         //     std::cout << "error" << res.size() <<" "<<mq<<std::endl;
         //     exit(-1);
         // }
+    }
+    // cout<<endl;
+}
+
+void proceed_result_glf(vector<SWResult> *res_d, vector<SWResult> &res_t, \
+                        const char *query, const char *subj, QueryGroup &q_group,\
+                        const char *s_name, const size_t *s_offsets, const size_t *sn_offsets, const size_t s_num, \
+                        size_t total_db_size)
+{
+    set<int> modified_resq;
+    size_t n_subj = s_num / sizeof(size_t);
+// get res_t score,bitscore->evalue
+// #pragma omp parallel for
+    for (int t = 0; t < res_t.size(); t++)
+    {
+        if (!res_t[t].report)
+            continue;
+        double score = res_t[t].score;
+        if (score >= min_score)
+        {
+            int num_s = get_pos(res_t[t].s_res[0], s_offsets, n_subj);
+            int num_q = res_t[t].num_q;
+            res_t[t].num_q = q_group.id[num_q];
+            uint32_t s_len = s_offsets[num_s + 1] - s_offsets[num_s] - 1;
+
+            double e_value = total_db_size * (q_group.length[num_q]) * pow(2, -res_t[t].bitscore);
+            // cout << "\nEvalue " << e_value << endl;
+            if (e_value <= max_evalue)
+            {
+                res_t[t].e_value = e_value;
+                res_t[t].sn_offset = sn_offsets[num_s];
+                res_t[t].sn_len = sn_offsets[num_s + 1] - sn_offsets[num_s] - 1;
+                string sn(s_name + res_t[t].sn_offset, res_t[t].sn_len);
+                res_t[t].s_name = sn;
+                // size_t len = res_t[t].align_length;
+                res_t[t].s_len = s_len;
+            }
+            else{
+                res_t[t].report=false;
+                res_t[t].q.clear();
+                res_t[t].s.clear();
+                res_t[t].s_ori.clear();
+                res_t[t].match.clear();
+            }
+        }
+        else
+        {
+            res_t[t].report=false;
+            res_t[t].q.clear();
+            res_t[t].s.clear();
+            res_t[t].s_ori.clear();
+            res_t[t].match.clear();
+        }
+        res_t[t].s_res.clear();
+        res_t[t].q_res.clear();
+    }
+    for (int t = 0; t < res_t.size(); t++)
+    {
+        if (!res_t[t].report)
+            continue;
+        // SWResult& res = res_t[t];
+        res_d[res_t[t].num_q].emplace_back(res_t[t]);
+        push_heap(res_d[res_t[t].num_q].begin(), res_d[res_t[t].num_q].end(), [&](const SWResult &sw1, const SWResult &sw2)
+                          { return (sw1.e_value == sw2.e_value) ? (sw1.score > sw2.score) : (sw1.e_value < sw2.e_value); });
+                // res_tmp.emplace_back(res);
+        modified_resq.insert(res_t[t].num_q);
+    }
+
+    vector<int> modified_resq_list;
+    modified_resq_list.assign(modified_resq.begin(), modified_resq.end());
+#pragma omp parallel for
+    for (int i=0;i<modified_resq_list.size();i++)
+    {
+        int mq = modified_resq_list[i];
+        vector<SWResult> &res = res_d[mq];
+
+        // sort(res.begin(), res.end(), [&](const DisplayResult &sw1, const DisplayResult &sw2)
+        //      { return (sw1.e_value == sw2.e_value) ? (sw1.score > sw2.score) : (sw1.e_value < sw2.e_value); });
+        if (max_display_align > 0 && res.size() > max_display_align)
+        {
+            int pop_size = res.size() - max_display_align;
+            for (int i = 0; i < pop_size; i++)
+            {
+                pop_heap(res.begin(), res.end() - i, [&](const SWResult &sw1, const SWResult &sw2)
+                         { return (sw1.e_value == sw2.e_value) ? (sw1.score > sw2.score) : (sw1.e_value < sw2.e_value); });
+                // res.pop_back();
+            }
+            // res.erase(res.begin() + max_display_align, res.end());
+            res.resize(max_display_align);
+            assert(res.size() == max_display_align);
+        }
     }
     // cout<<endl;
 }

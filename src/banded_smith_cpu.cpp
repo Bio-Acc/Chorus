@@ -1,10 +1,12 @@
 #include "smith.h"
+#include "../gpu-sw/sw-lib.cc"
+#include "../gpu-sw/core.hh"
 // #include <libunwind.h>
 // #include <gperftools/tcmalloc.h>
 
 #define max2(m, n) ((m) > (n) ? (m) : (n))
 #define max3(m, n, p) ((m) > (n) ? ((m) > (p) ? (m) : (p)) : ((n) > (p) ? (n) : (p)))
-#define MASK5(v) (v & 0b11111)
+// #define MASK5(v) (v & 0b11111)
 #define END 0
 #define TOP 1
 #define LEFT 2
@@ -25,6 +27,28 @@ inline char get_char(const char *s, size_t offset)
 {
     size_t n_bit = offset * 5;
     return MASK5((unsigned)((*((uint16_t *)&(s[n_bit >> 3]))) >> (n_bit & 7)));
+}
+
+string get_substr(const char* s, int begin_p, int end_p) {
+
+    char tmp[end_p - begin_p] = {0};
+    for (size_t i = begin_p; i < end_p; i++)
+    {
+        tmp[i - begin_p] = char(s[i] + 65);
+    }
+    string ss(tmp, end_p - begin_p);
+    return ss;
+}
+
+string get_substr_T(const char* s, int begin_p, int end_p) {
+
+    string ss;
+    for (size_t i = begin_p; i < end_p; i++)
+    {
+        if(get_char(s,i) == END_SIGNAL) continue;
+        ss += get_char(s,i) + 65;
+    }
+    return ss;
 }
 
 void smith_waterman_kernel(const int idx, SWResult *res, SWTasks *sw_task)
@@ -290,7 +314,241 @@ void smith_waterman_kernel(const int idx, SWResult *res, SWTasks *sw_task)
         res->s_ori = s_ori;
         res->match = match;
     }
+}
+
+char* str_get_substr(const char* str, int begin, int end) {
+    int len = end - begin ;
+    char* substr = new char[len + 1];
+    for(int i = 0; i < len; ++i) substr[i] = str[begin+i];
+    // strncpy(substr, str + begin, len);
+    substr[len] = '\0';
+    return substr;
+}
+
+void gpu_SW(vector<SWResult> &res,SWTasks *sw_task)
+{
+    // 两个序列
+    const char *query = sw_task->q;
+    const char *target = sw_task->c;
+    size_t c_len = sw_task->c_len;
+
+
+    struct glf::sw_handle<eccl::seq_type::prot>* hdl;     //没有指定dna,或蛋白,创造handle的选项可能需要指定,ctype 模板参数.可能可以
+    // 有些选项,DNA 蛋白的打分矩阵,
+    // 蛋白的话,cigar的值也需要调整,eg. score的正负和match和mismatch
+    // 需求不一样
+    struct glf::sw_batch_opts  batch_opts;
+    hdl = glf::sw_create<eccl::seq_type::prot>();
     
+    std::vector<std::string_view> q;
+    std::vector<std::string_view> c;
+    std::vector<string> qs;
+    std::vector<string> cs;
+    
+    // std::vector<sw_align> cur;
+
+
+    for(int idx = 0; idx < sw_task->num_task; ++idx){
+
+        size_t q_idx = sw_task->q_idxs[idx];
+        size_t n = sw_task->q_lens[idx];
+        size_t diag = sw_task->diags[idx]; //  pos of c at end of q
+
+        int64_t c_begin = (int64_t)diag - band_width - n;
+        size_t c_end = diag + band_width;
+        c_begin = c_begin >= 0 ? c_begin : 0;
+        c_end = c_end <= c_len ? c_end : c_len;
+        if (has_must_include)
+        {
+            if (!check_include(target, c_begin, c_end))
+            {
+                res[idx].report = false;
+                return;
+            }
+        }
+        size_t width = (n + band_width) << 1;
+        size_t height = band_width + 2;
+        // cout << "\nQUERY\n";
+        // for(int it = 0; it< n; ++it)cout << char(query[q_idx+it]+65);
+        string _q = get_substr(query,q_idx,q_idx+n);
+        string _c = get_substr_T(target,c_begin,c_end);
+        qs.push_back(_q);
+        cs.push_back(_c);
+    }
+    for(int i = 0; i < qs.size(); ++i){
+        q.push_back(qs[i]);
+        c.push_back(cs[i]);
+    }
+    std::vector<sw_align> cur = glf::sw_batch(hdl,q,c, batch_opts);
+    
+
+    for(int k = 0; k < cur.size(); k++){
+        cigar_to_string(cur[k],q[k], c[k], res[k].q_res, res[k].s_res);
+        // cout << "\nq_res\n";
+        // for (int i=0;i<res[k].q_res.size();i++)
+        // {
+        //     if (res[k].q_res[i]==-1) cout<<"-";
+        //     else cout<<(char)(q[k][res[k].q_res[i]]);
+        // }
+        // cout<<endl;
+        // cout << "s_res\n";
+        // for (int i=0;i<res[k].s_res.size();i++)
+        // {
+        //     if (res[k].s_res[i]==-1) cout<<"-";
+        //     else cout<<(char)(c[k][res[k].s_res[i]]);
+        // }
+        // cout<<endl;
+
+        size_t q_idx = sw_task->q_idxs[k];
+        size_t n = sw_task->q_lens[k];
+        size_t diag = sw_task->diags[k]; //  pos of c at end of q
+
+        int64_t c_begin = (int64_t)diag - band_width - n;
+        size_t c_end = diag + band_width;
+        c_begin = c_begin >= 0 ? c_begin : 0;
+        c_end = c_end <= c_len ? c_end : c_len;
+
+        res[k].begin_q = cur[k].query_begin + q_idx;
+        res[k].begin_s = cur[k].ref_begin + c_begin;
+        res[k].end_q = cur[k].query_end + q_idx;
+        res[k].end_s = cur[k].ref_end + c_begin;
+
+        size_t len = res[k].s_res.size();
+        res[k].align_length = len;
+        res[k].score = cur[k].sw_score;
+        res[k].bitscore = (E_lambda * res[k].score - log(E_k)) / (0.69314718055995);
+        char s[len + 1] = {0};
+        char q_seq[len + 1] = {0};
+        char s_ori[len + 1] = {0};
+        char match[len + 1] = {0};
+        int s_ori_len = 0;
+        res[k].gap_open = 0;
+        res[k].gaps = 0;
+        bool ga = false;
+        for (int i = 0; i < len; i++)
+        {
+            if (res[k].s_res[i] != (size_t)(-1))
+            {
+                ga = false;
+                s[i] = c[k][res[k].s_res[i]];
+                // s[i] = get_char(c, res[k].s_res[i]) + 65;
+                if (s[i] == 95)
+                    s[i] = '*';
+                s_ori[s_ori_len++] = s[i];
+            }
+            else
+            {
+                s[i] = '-';
+                res[k].gaps++;
+                if (!ga)
+                {
+                    ga = true;
+                    res[k].gap_open++;
+                }
+            }
+        }
+
+        if (has_must_include)
+        {
+            string s_ori_str(s_ori, len);
+            if (!check_include(s_ori_str))
+            {
+                res[k].report = false;
+                return;
+            }
+        }
+        ga = false;
+        for (int i = 0; i < len; i++)
+        {
+            // cout<<q_res[t][i]<<" ";
+            if (res[k].q_res[i] != (size_t)(-1))
+            {
+                ga = false;
+                q_seq[i] = q[k][res[k].q_res[i]];
+            }
+            else
+            {
+                q_seq[i] = '-';
+                res[k].gaps++;
+                if (!ga)
+                {
+                    ga = true;
+                    res[k].gap_open++;
+                }
+            }
+        }
+
+        res[k].mismatch = 0;
+        res[k].positive = 0;
+        for (int i = 0; i < len; i++)
+        {
+            match[i]=' ';
+            if (BLOSUM62[(q_seq[i] - 65) * 26 + (s[i] - 65)] > 0 && q_seq[i]!='-' && s[i]!='-')
+            {
+                res[k].positive++;
+                match[i]='+';
+            }
+            if (q_seq[i] != s[i])
+            {
+                res[k].mismatch++;
+            }
+            else
+            {
+                match[i]=q_seq[i];
+            }
+                
+        }
+        res[k].n_identity = res[k].align_length - res[k].mismatch;
+        res[k].p_identity = (1 - (double)res[k].mismatch / res[k].align_length) * 100;
+        // todo
+        res[k].s_res[0] += c_begin;
+        if (detailed_alignment)
+        {
+            res[k].q = q_seq;
+            res[k].s = s;
+            res[k].s_ori = s_ori;
+            res[k].match = match;
+        }
+    }
+}
+
+void total_gpu_SW(SWTasks tasks, vector<SWResult> res[][NUM_STREAM],\
+                  const char* query,const char* target,int num_g, int span)
+{
+    
+    size_t n = tasks.num_task;
+    // assert(n == num_g * NUM_STREAM);
+
+    // get 每一个query与 target
+    struct glf::sw_handle<eccl::seq_type::prot>* hdl;  
+    struct glf::sw_batch_opts  batch_opts;
+    hdl = glf::sw_create<eccl::seq_type::prot>();
+    std::vector<std::string_view> q;
+    std::vector<std::string_view> t;
+    std::vector<string> qs;
+    std::vector<string> cs;
+
+    for(int i = 0; i < n; ++i){
+        // TODO check split task
+        size_t q_begin = tasks.q_idxs[i];
+        size_t q_len = tasks.q_lens[i];
+        int64_t t_begin = (int64_t)tasks.diags[i] - band_width - tasks.q_lens[i];
+        size_t t_end = tasks.diags[i] + band_width;
+        
+        // cout << "Q\t" << q_begin << "\t" << q_len + q_begin << "\n";
+        // cout << "T\t" << t_begin << "\t" << t_end << "\n";
+        
+        string _q = get_substr(query,q_begin,q_begin+q_len);
+        string _c = get_substr_T(target,t_begin,t_end);
+        qs.push_back(_q);
+        cs.push_back(_c);
+    }
+    for(int i = 0; i < qs.size(); ++i){
+        q.push_back(qs[i]);
+        t.push_back(cs[i]);
+    }
+    std::vector<sw_align> cur = glf::sw_batch(hdl,q,t, batch_opts);
+   
 }
 
 // void banded_smith_waterman(const char *q, const char *c, vector<uint32_t> &q_idxs, vector<uint32_t> &q_lens, vector<size_t> &diags, size_t c_len, size_t num_task, vector<SWResult> &res, ThreadPool *pool, vector<future<int>> &rs)

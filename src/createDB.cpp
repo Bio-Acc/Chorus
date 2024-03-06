@@ -1,7 +1,7 @@
 
 #include "params.h"
 #include "util.h"
-#define MASK5(v) (v & 0b11111)
+
 
 #define MAX_QUERY_LENGTH 10000
 
