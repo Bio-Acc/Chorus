@@ -49,9 +49,11 @@ CUDA Environment (add to ~/.bashrc):
 
 Input: A protein database file (in fasta format).
 
-    ./createDB <protein_db(_tantaned).fasta> <output db> <batch size (GB)>
+    ./createDB <protein_db(_tantaned).fasta> <output db> [batch size (GB)]
 
 Output: This step will create database files for each part, including "dbnameX.seq", "dbnameX.name", "dbnameX.sofs" and "dbnameX.nofs", to the same directory with the original db file.
+
+If the batch size not specified, the default size is one-third of the GPU memory.
 
 E.g.
 

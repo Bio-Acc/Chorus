@@ -16,7 +16,7 @@ void show_help_info(int argc, const char **argv)
              << "\t"
              << "Output format: 0: m8 tabular (like blast+ outfmt 6); 1: detailed alignment; 2: tabular and full ref seqs (fasta); 3: Opfi format; 4: a3m format; 5: Diamond benchmark format. [" << D_OUTFMT << "]" << endl;
         cout << "\t"
-             << "-l, --filter-level"
+             << "-p0, --filter-level"
              << "\t"
              << "INT"
              << "\t"
@@ -163,7 +163,7 @@ int main(int argc, const char **argv)
     arg_parser.addArgument("-e", "--max-evalue", 1, true);
     arg_parser.addArgument("--num-threads", 1, true);
     arg_parser.addArgument("--band-width", 1, true);
-    arg_parser.addArgument("-l", "--filter-level", 1, true);
+    arg_parser.addArgument("-p", "--filter-level", 1, true);
     arg_parser.addArgument("-k", "--seed-length", 1, true);
     arg_parser.addArgument("-w", "--qit-width", 1, true);
     arg_parser.addArgument("-h", "--hash-size", 1, true); // 0: maybe ok, 1: ok, 2: too large

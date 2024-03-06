@@ -1,6 +1,7 @@
 
 #include "params.h"
 #include "util.h"
+#include "cudaTool.h"
 #define MASK5(v) (v & 0b11111)
 
 #define MAX_QUERY_LENGTH 10000
@@ -17,7 +18,13 @@ void help(int argc, const char **argv)
 {
     if (argc <= 1 || !strcmp(argv[1], "--help"))
     {
-        cout << "usage: " << argv[0] << " <protein_db.fasta> <output db> <batch size (GB)>" << endl;
+        std::cout << "Usage: <executable_name> <protein_db.fasta> <output_db> [batch_size_GB]\n\n"
+              << "-<protein_db.fasta>: Path to the input FASTA file containing protein sequences.\n"
+              << "-<output_db>: Path for the output database file to be created.\n"
+              << "-[batch_size_GB]: Optional. Batch size in gigabytes (GB) for processing. \n"
+              << "If not specified, the default size is one-third of the GPU memory.\n\n"
+              << "Example: ./creatDB protein_db.fasta output_db 4\n\n"
+              << "Note: The default value of batch_size_GB is set to one-third of the available GPU memory, it is advised not to manually increase this value to more than half of the GPU memory.\n ";
         exit(0);
     }
 }
@@ -501,15 +508,22 @@ void create_db(const char *fa_file, const char *out_path, size_t max_size)
 int main(int argc, const char **argv)
 {
     help(argc, argv);
-    if (argc <= 3)
+    if (argc - 1 <= 1 || argc - 1 >= 4)
     {
-        std::cerr << "usage: " << argv[0] << " <protein_db.fasta> <output db> <batch size (GB)>" << std::endl;
+        std::cerr << "usage: " << argv[0] << " <protein_db.fasta> <output db> [batch size (GB)]" << std::endl;
         return -1;
     }
-
     size_t stream_max_size = (size_t)4 * 1024 * 1024 * 1024 - MAX_QUERY_LENGTH;
-
-    size_t db_max_size = stod(argv[3]) * 1024 * 1024 * 1024;
+    double batch_size;
+    if (argc - 1 == 2)
+    {
+        batch_size = getVRAM();
+    }
+    else if (argc - 1 == 3)
+    {
+        batch_size = stod(argv[3]);
+    }
+    size_t db_max_size = batch_size * 1024 * 1024 * 1024;
 
     stream_max_size = min((db_max_size - 1) / NUM_STREAM + 1, stream_max_size);
 
