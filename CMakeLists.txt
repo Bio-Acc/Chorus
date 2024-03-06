@@ -36,6 +36,10 @@ set(SOURCES_SEARCH
     src/query_group.cu
 )
 
+set(SOURCES_CUDATOOL
+    src/cudaTool.cu
+)
+
 add_library(util STATIC ${SOURCES_UTIL})
 target_include_directories(util  PRIVATE 
         ${PROJECT_SOURCE_DIR}/include
@@ -53,7 +57,7 @@ target_compile_options (util
 add_executable(query src/main.cpp ${SOURCES_SEARCH})
 target_link_libraries(query util)
 
-add_executable(createDB src/createDB.cpp)
+add_executable(createDB src/createDB.cpp ${SOURCES_CUDATOOL})
 
 target_include_directories(query
     PRIVATE 

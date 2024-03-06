@@ -49,9 +49,11 @@ CUDA Environment (add to ~/.bashrc):
 
 Input: A protein database file (in fasta format).
 
-    ./createDB <protein_db(_tantaned).fasta> <output db> <batch size (GB)>
+    ./createDB <protein_db(_tantaned).fasta> <output db> [batch size (GB)]
 
 Output: This step will create database files for each part, including "dbnameX.seq", "dbnameX.name", "dbnameX.sofs" and "dbnameX.nofs", to the same directory with the original db file.
+
+If the batch size not specified, the default size is one-third of the GPU memory.
 
 E.g.
 
@@ -82,7 +84,7 @@ to get help message.
 | Arg           | Description                                                                                                                     | Default |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | --outfmt | Output format: 0: m8 tabular (like blast+ outfmt 6); 1: detailed alignment; 2: tabular and ref seqs (fasta); 3: Opfi format; 4: a3m format; 5: Diamond benchmark format. | 0 |
-| -l, --filter-level    | The filter level to pass a database sequence to smith waterman align. The smaller the value, the more sensitive the result. ("sensitivity" refers to the ability of a sequence alignment algorithm to correctly identify and align similar or homologous sequences, especially those that share low levels of similarity or are distantly related.)| 1       |
+| -p, --filter-level    | The filter level to pass a database sequence to smith waterman align. The smaller the value, the more sensitive the result. ("sensitivity" refers to the ability of a sequence alignment algorithm to correctly identify and align similar or homologous sequences, especially those that share low levels of similarity or are distantly related.)| 1       |
 | --min-score | The minimum score for each alignment to display.                                                                                | 0       |
 | -e, --max-evalue     | The maximum expectation value for each alignment to display                                                                     | 1e1   |
 | --max-output-align | The maximum number of alignments to display for each query. (0 means no limit)                                                                      | 0    |
