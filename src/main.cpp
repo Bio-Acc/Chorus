@@ -91,6 +91,8 @@ void show_args()
     cout << "Alignment Type" << "\t";
 #ifdef USE_GPU_SW
     cout << "GPU SW" << endl;
+#elif defined(GLF_GPU_SW)
+     cout << "GLF SW" << endl;
 #else
     cout << "CPU BANDED SW" << endl;
 #endif
