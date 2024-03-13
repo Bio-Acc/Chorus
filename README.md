@@ -103,5 +103,5 @@ We offer Docker services for Chorus. For more information, please visit our Dock
 
 ## Manuscript Reproduction Scripts: "Rapid Multiple Protein Sequence Search by Parallel and Heterogeneous Computation"
 
-If you want to reproduce the experimental results in the manuscript. please visit: [Chorus Reproduction Scripts](https://github.com/FanxwGit/Chorus-Reproduction-Scripts).
+If you want to reproduce the experimental results in the manuscript. please visit: [Chorus Reproduction Scripts](https://github.com/Bio-Acc/Chorus-Reproduction-Scripts).
 
