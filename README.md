@@ -3,8 +3,10 @@
 Chorus is an efficient protein-protein local alignment search tool for multiple query sequences and large databases. Our method is up to 300x faster than NCBI-BLASTP when inputting multiple query seqs at a time, and can stay ahead of the state-of-the-art database-index methods when there are less than 5000 input query seqs (2.2-27x faster than fastest MMseqs2, 1.1-9x than fastest DIAMOND), while maintaining a low memory footprint. 
 
 
-## Requirements
+## Publication
+[Rapid multiple protein sequence search by parallel and heterogeneous computation](https://doi.org/10.1093/bioinformatics/btae151)
 
+## Requirements
 
 Hardware:
 
