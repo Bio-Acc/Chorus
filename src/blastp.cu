@@ -228,6 +228,9 @@ void search_db_batch(const char *query, char *subj[], vector<QueryGroup> &q_grou
     struct timeval t_start, t_end, tt_start;
 
     gettimeofday(&t_start, NULL);
+    
+    // Set CUDA device
+    cudaSetDevice(gpu_device);
 
     CUDA_CALL(cudaMemcpyToSymbol(SEED_LENGTH, &seed_length, sizeof(int)));
     CUDA_CALL(cudaMemcpyToSymbol(QIT_WIDTH, &qit_width, sizeof(int)));

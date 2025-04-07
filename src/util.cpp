@@ -11,9 +11,10 @@ int band_width;
 int num_threads;
 int min_score;
 double max_evalue;
+bool detailed_alignment = false;
+int gpu_device;
 vector<Condition> must_include;
 bool has_must_include = false;
-bool detailed_alignment = false;
 
 // StripedSmithWaterman::Aligner aligner((-1) * SCORE_GAP, (-1) * SCORE_GAP_EXT);
 // StripedSmithWaterman::Filter filter;

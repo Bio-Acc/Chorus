@@ -3,6 +3,7 @@
 
 #if __cplusplus >= 201103L
 #include <unordered_map>
+#include <string>
 typedef std::unordered_map<std::string, size_t> IndexMap;
 #else
 #include <map>

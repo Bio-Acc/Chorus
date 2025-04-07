@@ -1,4 +1,3 @@
-
 #include "blastp.h"
 
 void show_help_info(int argc, const char **argv)
@@ -75,6 +74,12 @@ void show_help_info(int argc, const char **argv)
              << "STRING INT"
              << "\t"
              << "Requires the ref sequence must match a regular expression for N times. (e.g. --must-include \"R[A-Z]{4,7}H\" 2)" << endl;
+        cout << "\t"
+             << "--gpu"
+             << "\t\t\t"
+             << "INT"
+             << "\t"
+             << "GPU device ID to use for computation. [" << D_GPU_DEVICE << "]" << endl;
         cout << endl;
         exit(0);
     }
@@ -132,6 +137,8 @@ void show_args()
          << "\t" << hashtable_size_ratio << endl;
     cout << "SW Band Width"
          << "\t" << band_width << endl;
+    cout << "GPU Device ID"
+         << "\t" << gpu_device << endl;
 
     cout << "Scoring Matrix"
          << "\t"
@@ -169,6 +176,7 @@ int main(int argc, const char **argv)
     arg_parser.addArgument("-h", "--hash-size", 1, true); // 0: maybe ok, 1: ok, 2: too large
     arg_parser.addArgument("--outfmt", 1, true);
     arg_parser.addArgument("--must-include", '+', true);
+    arg_parser.addArgument("--gpu", 1, true);
     arg_parser.parse(argc, argv);
 
     string argv_query, argv_out;
@@ -183,6 +191,7 @@ int main(int argc, const char **argv)
     get_arg("max-output-align", max_display_align, D_MAX_DISPLAY_ALIGN);
     get_arg("min-score", min_score, D_MIN_SCORE);
     get_arg("max-evalue", max_evalue, D_MAX_EVALUE);
+    get_arg("gpu", gpu_device, D_GPU_DEVICE);
 #ifdef USE_GPU_SW
      get_arg("band-width", band_width, D_BAND_WIDTH_GPU);
 #else

@@ -23,6 +23,7 @@
 #define D_MIN_SCORE 0
 #define D_MAX_EVALUE 1e1
 #define D_HASH_RATIO 2
+#define D_GPU_DEVICE 0
 
 struct Condition
 {
@@ -42,6 +43,7 @@ extern int num_threads;
 extern int min_score;
 extern double max_evalue;
 extern bool detailed_alignment;
+extern int gpu_device;
 
 // A-Z: 0-25, end of seq: 0b11111(31), illegal word: 0b11110(30)
 #define ILLEGAL_WORD 30

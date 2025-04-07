@@ -86,7 +86,7 @@ to get help message.
 | Arg           | Description                                                                                                                     | Default |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | --outfmt | Output format: 0: m8 tabular (like blast+ outfmt 6); 1: detailed alignment; 2: tabular and ref seqs (fasta); 3: Opfi format; 4: a3m format; 5: Diamond benchmark format. | 0 |
-| -p, --filter-level    | The filter level to pass a database sequence to smith waterman align. The smaller the value, the more sensitive the result. ("sensitivity" refers to the ability of a sequence alignment algorithm to correctly identify and align similar or homologous sequences, especially those that share low levels of similarity or are distantly related.)| 1       |
+| -p, --filter-level    | Controls the diagonal hit filtering threshold that determines which sequences proceed to Smith-Waterman precise alignment. Lower values increase sensitivity but require more computation. The filtering threshold is calculated as: threshold = 5 - k + p + log10(query_length). Please ensure the threshold remains ≥ 1. This parameter directly affects the balance between search sensitivity and speed. | 1    |
 | --min-score | The minimum score for each alignment to display.                                                                                | 0       |
 | -e, --max-evalue     | The maximum expectation value for each alignment to display                                                                     | 1e1   |
 | --max-output-align | The maximum number of alignments to display for each query. (0 means no limit)                                                                      | 0    |
@@ -96,6 +96,7 @@ to get help message.
 | -h, --hash-size | Voting hash table size ratio. The larger the value, the larger the GPU voting hash table (doubly for each increment). (0: maybe OK; 1: OK for most query seqs; 2: redundancy) | 2 |      
 | --band-width      | The bandwidth in banded smith-waterman. The larger the value, the more sensitive the result.                                    | 8      |
 | --must-include    | Requires the ref sequence must match a regular expression n times. (e.g. --must-include "R[A-Z]{4,7}H" 2)   | No limit  |
+| --gpu | GPU device ID to use for computation. Use this to select a specific GPU when multiple are available. | 0 |
 
 ## More installation methods
 
